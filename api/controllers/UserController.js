@@ -44,51 +44,66 @@ create: function (req, res, next) {
 	});
 },
 
-show: function (req, res, next) {
-	User.findOne(req.param('id'), function foundUser (err, user) {
-		if (err) return next(err);
-		if (!user) return next();
-		res.view({
-			user: user
-		});
-	});
-},
+// render the profile view (e.g. /views/show.ejs)
+  show: function(req, res, next) {
+    User.findOne(req.param('id'), function foundUser(err, user) {
+      if (err) return next(err);
+      if (!user) return next();
+      res.view({
+        user: user
+      });
+    });
+  },
 
-index: function (req, res, next) {
-	User.find(function foundUsers (err, users) {
-		if (err) return next(err);
+  index: function(req, res, next) {
 
-		res.view({
-		users: users
-		});
-	});
-},
+    // Get an array of all users in the User collection(e.g. table)
+    User.find(function foundUsers(err, users) {
+      if (err) return next(err);
+      // pass the array down to the /views/index.ejs page
+      res.view({
+        users: users
+      });
+    });
+  },
 
-edit: function (req, res, next) {
-	sails.log.info("asdasdasd");
-	User.findOne(req.param('id'), function foundUser (err, user) {
-		if (err) return next(err);
-		if (!user) return next();
+  // render the edit view (e.g. /views/edit.ejs)
+  edit: function(req, res, next) {
 
-		res.view({
-		user: user
-		});		
-	});
-},
- 
-update: function (req, res, next) {
-	sails.log.info("uere00");
-	sails.log.info(req.param('id'));
-	User.update(req.param('id'), req.params.all(), function userUpdated (err) {
-		sails.log.info("asdasdsa");
-		sails.log.error(err);
-		if (err) {
-			return res.redirect('user/edit/'+req.param['id']);
-		}
+    // Find the user from the id passed in via params
+    User.findOne(req.param('id'), function foundUser(err, user) {
+      if (err) return next(err);
+      if (!user) return next('User doesn\'t exist.');
 
-		res.redirect('user/show/'+req.param['id']);
-	});
+      res.view({
+        user: user
+      });
+    });
+  },
 
-}
+  // process the info from edit view
+  update: function(req, res, next) {
 
-};
+    if (req.session.User.admin) {
+      var userObj = {
+        name: req.param('name'),
+        title: req.param('title'),
+        email: req.param('email'),
+        admin: req.param('admin')
+      }
+    } else {
+      var userObj = {
+        name: req.param('name'),
+        title: req.param('title'),
+        email: req.param('email')
+      }
+    }
+
+    User.update(req.param('id'), userObj, function userUpdated(err) {
+      if (err) {
+        return res.redirect('/user/edit/' + req.param('id'));
+      }
+
+      res.redirect('/user/show/' + req.param('id'));
+    });
+  },
